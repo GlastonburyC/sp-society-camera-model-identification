@@ -260,7 +260,7 @@ def process_item(item, training, transforms=[[]]):
 
         # some images are landscape, others are portrait, so augment training by randomly changing orientation
         if ((np.random.rand() < 0.5) and training) or force_orientation:
-            img = np.swapaxes(_img, 0,1)
+            img = np.rot90(_img, 3, (0,1))
         else:
             img = _img
 
