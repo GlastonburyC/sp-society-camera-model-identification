@@ -571,20 +571,15 @@ else:
     
     from conditional import conditional
 
-    with conditional(args.test, open('submission.csv', 'w')) as csvfile:
-
+  with conditional(args.test, open('submissions/submission_test_%s.csv'%model_name, 'w')) as csvfile:
         if args.test:
             csv_writer = csv.writer(csvfile, delimiter=',',quotechar='|', quoting=csv.QUOTE_MINIMAL)
-            csv_writer.writerow(['fname','camera'])
+            csv_writer.writerow(['fname','camera']+CLASSES)
         else:
             correct_predictions = 0
-
         for i, idx in enumerate(tqdm(ids)):
-
             img = np.array(Image.open(idx))
-
             manipulated = np.float32([1. if idx.find('manip') != -1 else 0.])
-
             sx = img.shape[1] // CROP_SIZE
             sy = img.shape[0] // CROP_SIZE
             img_batch = np.zeros((2* sx * sy, CROP_SIZE, CROP_SIZE, 3), dtype=np.float32)
@@ -592,31 +587,26 @@ else:
             i = 0
             for it in range(2):
                 if it == 1:
-                    img = np.swapaxes(img, 0,1)
+                    #img = np.swapaxes(img, 0,1)
+                    img = np.rot90(_img, 3, (0,1))
                 for x in range(sx):
                     for y in range(sy):
                         _img = np.array(img[y*CROP_SIZE:(y+1)*CROP_SIZE, x*CROP_SIZE:(x+1)*CROP_SIZE])
-
                         img_batch[i]         = preprocess_image(_img)
                         manipulated_batch[i] = manipulated
                         i += 1
-
             prediction = model.predict_on_batch([img_batch,manipulated_batch])
             if prediction.shape[0] != 1: # TTA
                 # all crops and flip
                 # TODO: geometric mean
                 prediction = np.mean(prediction, axis=0)
-
             prediction_class_idx = np.argmax(prediction)
-
             if args.test_train:
                 class_idx = get_class(idx.split('/')[-2])
                 if class_idx == prediction_class_idx:
                     correct_predictions += 1
-
             if args.test:
-                csv_writer.writerow([idx.split('/')[-1], CLASSES[prediction_class_idx]])
-
+                csv_writer.writerow([idx.split('/')[-1], CLASSES[prediction_class_idx]]+prediction.tolist())
         if args.test_train:
             print("Accuracy: " + str(correct_predictions / i))
                 
