@@ -571,7 +571,7 @@ else:
     
     from conditional import conditional
 
-  with conditional(args.test, open('submissions/submission_test_%s.csv'%model_name, 'w')) as csvfile:
+    with conditional(args.test, open('submissions/submission_test_%s.csv'%model_name, 'w')) as csvfile:
         if args.test:
             csv_writer = csv.writer(csvfile, delimiter=',',quotechar='|', quoting=csv.QUOTE_MINIMAL)
             csv_writer.writerow(['fname','camera']+CLASSES)
